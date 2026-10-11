@@ -54,6 +54,10 @@ public class Video extends AuditedEntity {
     @Column(name = "delivered_at")
     private Instant deliveredAt;
 
+    /** Set only when the client approves the video in their portal. */
+    @Column(name = "approved_at")
+    private Instant approvedAt;
+
     protected Video() {
     }
 
@@ -85,11 +89,18 @@ public class Video extends AuditedEntity {
         }
         if (target.compareTo(VideoStatus.COMPLETED) < 0) {
             editCompletedAt = null;
+            approvedAt = null;
         }
         if (target.compareTo(VideoStatus.DELIVERED) < 0) {
             deliveredAt = null;
         }
         status = target;
+    }
+
+    /** Client approval: completes the video and records who signed it off. Package-private (workflow only). */
+    void approveAt(Instant now) {
+        transitionTo(VideoStatus.COMPLETED, now);
+        approvedAt = now;
     }
 
     public Long getId() {
@@ -146,5 +157,9 @@ public class Video extends AuditedEntity {
 
     public Instant getDeliveredAt() {
         return deliveredAt;
+    }
+
+    public Instant getApprovedAt() {
+        return approvedAt;
     }
 }

@@ -26,6 +26,7 @@ public record VideoResponse(
         Instant mediaReceivedAt,
         Instant editCompletedAt,
         Instant deliveredAt,
+        Instant approvedAt,
         Instant createdAt,
         Instant updatedAt) {
 
@@ -45,6 +46,7 @@ public record VideoResponse(
                 video.getMediaReceivedAt(),
                 video.getEditCompletedAt(),
                 video.getDeliveredAt(),
+                video.getApprovedAt(),
                 video.getCreatedAt(),
                 video.getUpdatedAt());
     }

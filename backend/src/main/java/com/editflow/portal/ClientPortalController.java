@@ -19,7 +19,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Read-only portal for CLIENT users, plus revision requests. No endpoint here changes video status. */
+/**
+ * Client portal for CLIENT users: read-only views, revision requests, and the client's explicit
+ * approval of a video in review (the only status change a client can make, validated by the workflow).
+ */
 @RestController
 @RequestMapping("/api/client/me")
 public class ClientPortalController {
@@ -63,6 +66,11 @@ public class ClientPortalController {
     @GetMapping("/videos/{id}")
     public ClientVideoDetailResponse video(@PathVariable Long id) {
         return portalService.video(id);
+    }
+
+    @PostMapping("/videos/{id}/approve")
+    public ClientVideoResponse approveVideo(@PathVariable Long id) {
+        return portalService.approveVideo(id);
     }
 
     @PostMapping("/videos/{id}/revisions")

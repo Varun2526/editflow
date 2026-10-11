@@ -41,6 +41,51 @@ class VideoWorkflowTest {
     }
 
     @Test
+    void clientApprovalCompletesAReviewAndStampsTheApproval() {
+        Video video = videoAt(REVIEW);
+
+        Instant approved = clock.tick();
+        workflow.approveByClient(video, 0);
+
+        assertThat(video.getStatus()).isEqualTo(COMPLETED);
+        assertThat(video.getApprovedAt()).isEqualTo(approved);
+        assertThat(video.getEditCompletedAt()).isEqualTo(approved);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"PENDING", "MEDIA_RECEIVED", "EDITING", "COMPLETED", "DELIVERED"})
+    void clientApprovalOnlyFromReview(VideoStatus from) {
+        Video video = videoAt(from);
+
+        assertThatThrownBy(() -> workflow.approveByClient(video, 0))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("Only a video that is ready for your review can be approved");
+        assertThat(video.getStatus()).isEqualTo(from);
+        assertThat(video.getApprovedAt()).isNull();
+    }
+
+    @Test
+    void clientApprovalBlockedWhileChangeRequestsAreOpen() {
+        Video video = videoAt(REVIEW);
+
+        assertThatThrownBy(() -> workflow.approveByClient(video, 2)).isInstanceOf(ConflictException.class);
+        assertThat(video.getStatus()).isEqualTo(REVIEW);
+    }
+
+    @Test
+    void reopeningAnApprovedVideoClearsTheApprovalButDeliveryKeepsIt() {
+        Video reopened = videoAt(REVIEW);
+        workflow.approveByClient(reopened, 0);
+        workflow.transition(reopened, REVIEW);
+        assertThat(reopened.getApprovedAt()).isNull();
+
+        Video delivered = videoAt(REVIEW);
+        workflow.approveByClient(delivered, 0);
+        workflow.transition(delivered, DELIVERED);
+        assertThat(delivered.getApprovedAt()).isNotNull();
+    }
+
+    @Test
     void forwardStepsStampTheirStageTimestamps() {
         Video video = new Video(null, "Morning Workout Reel", ContentType.REEL);
 

@@ -61,6 +61,20 @@ public class VideoWorkflow {
         return List.copyOf(allowed);
     }
 
+    /**
+     * The client's explicit sign-off: REVIEW → COMPLETED with an approval timestamp. Not allowed
+     * while the client's own change requests are still open (the editor is working on them).
+     */
+    public void approveByClient(Video video, long openRevisions) {
+        if (video.getStatus() != REVIEW) {
+            throw new ConflictException("Only a video that is ready for your review can be approved");
+        }
+        if (openRevisions > 0) {
+            throw new ConflictException("This video has open change requests — your editor is still working on them");
+        }
+        video.approveAt(clock.instant());
+    }
+
     public void transition(Video video, VideoStatus target) {
         VideoStatus current = video.getStatus();
         if (current == target) {

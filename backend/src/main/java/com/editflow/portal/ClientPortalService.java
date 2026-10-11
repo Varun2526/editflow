@@ -24,6 +24,7 @@ import com.editflow.revision.dto.RevisionResponse;
 import com.editflow.security.CurrentUser;
 import com.editflow.video.Video;
 import com.editflow.video.VideoRepository;
+import com.editflow.video.VideoWorkflow;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
@@ -47,12 +48,14 @@ public class ClientPortalService {
     private final ProjectMetricsService metricsService;
     private final PaymentService paymentService;
     private final RevisionService revisionService;
+    private final VideoWorkflow workflow;
     private final Clock clock;
 
     public ClientPortalService(CurrentUser currentUser, ClientRepository clientRepository,
                                ProjectRepository projectRepository, VideoRepository videoRepository,
                                RevisionRepository revisionRepository, ProjectMetricsService metricsService,
-                               PaymentService paymentService, RevisionService revisionService, Clock clock) {
+                               PaymentService paymentService, RevisionService revisionService,
+                               VideoWorkflow workflow, Clock clock) {
         this.currentUser = currentUser;
         this.clientRepository = clientRepository;
         this.projectRepository = projectRepository;
@@ -61,6 +64,7 @@ public class ClientPortalService {
         this.metricsService = metricsService;
         this.paymentService = paymentService;
         this.revisionService = revisionService;
+        this.workflow = workflow;
         this.clock = clock;
     }
 
@@ -114,6 +118,16 @@ public class ClientPortalService {
     @Transactional
     public RevisionResponse requestRevision(Long videoId, RevisionRequest request) {
         return revisionService.createByClient(ownedVideo(videoId), request);
+    }
+
+    /** The client signs off a video in REVIEW (ownership checked; the workflow enforces the rules). */
+    @Transactional
+    public ClientVideoResponse approveVideo(Long videoId) {
+        Video video = ownedVideo(videoId);
+        long open = RevisionCounts.byVideo(revisionRepository, List.of(videoId))
+                .getOrDefault(videoId, RevisionCounts.NONE).open();
+        workflow.approveByClient(video, open);
+        return toClientVideos(List.of(video)).getFirst();
     }
 
     private Client ownClient() {

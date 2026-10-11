@@ -3,6 +3,7 @@ package com.editflow.portal;
 import static com.editflow.support.TestData.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -227,6 +228,127 @@ class ClientPortalIT extends IntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    // ---------- client approval ----------
+
+    @Test
+    void clientApprovesTheirOwnVideoInReview() throws Exception {
+        approve(rahulReviewVideo)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(rahulReviewVideo.getId()))
+                .andExpect(jsonPath("$.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.approvedAt").isNotEmpty())
+                .andExpect(jsonPath("$.deliveredAt").isEmpty());
+
+        Video saved = videoRepository.findById(rahulReviewVideo.getId()).orElseThrow();
+        assertThat(saved.getStatus()).isEqualTo(VideoStatus.COMPLETED);
+        assertThat(saved.getApprovedAt()).isNotNull();
+        assertThat(saved.getEditCompletedAt()).isNotNull();
+
+        // The admin sees the approval and the next step is delivery.
+        mvc.perform(get("/api/admin/videos/" + rahulReviewVideo.getId()).header("Authorization", bearer(admin)))
+                .andExpect(jsonPath("$.video.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.video.approvedAt").isNotEmpty())
+                .andExpect(jsonPath("$.video.allowedTransitions[0]").value("DELIVERED"));
+    }
+
+    @Test
+    void clientCannotApproveAnotherClientsVideo() throws Exception {
+        approve(urbanVideo)
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("You do not have access to this video"));
+
+        Video untouched = videoRepository.findById(urbanVideo.getId()).orElseThrow();
+        assertThat(untouched.getStatus()).isEqualTo(VideoStatus.REVIEW);
+        assertThat(untouched.getApprovedAt()).isNull();
+    }
+
+    @Test
+    void approvingAnUnknownVideoIs404() throws Exception {
+        mvc.perform(post("/api/client/me/videos/99999/approve").header("Authorization", bearer(rahul)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void onlyAVideoInReviewCanBeApproved() throws Exception {
+        approve(rahulPendingVideo)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Only a video that is ready for your review can be approved"));
+        assertThat(videoRepository.findById(rahulPendingVideo.getId()).orElseThrow().getStatus())
+                .isEqualTo(VideoStatus.PENDING);
+
+        // Approving twice is rejected too (already COMPLETED).
+        approve(rahulReviewVideo).andExpect(status().isOk());
+        approve(rahulReviewVideo).andExpect(status().isConflict());
+    }
+
+    @Test
+    void cannotApproveWhileOwnChangeRequestsAreOpen() throws Exception {
+        requestRevision(rahulReviewVideo, "00:17", "Faster transition").andExpect(status().isCreated());
+
+        approve(rahulReviewVideo)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("This video has open change requests — your editor is still working on them"));
+        assertThat(videoRepository.findById(rahulReviewVideo.getId()).orElseThrow().getStatus())
+                .isEqualTo(VideoStatus.REVIEW);
+    }
+
+    @Test
+    void adminCannotUseTheClientApprovalEndpoint() throws Exception {
+        mvc.perform(post("/api/client/me/videos/" + rahulReviewVideo.getId() + "/approve").header("Authorization", bearer(admin)))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/client/me/videos/" + rahulReviewVideo.getId() + "/approve"))
+                .andExpect(status().isUnauthorized());
+
+        assertThat(videoRepository.findById(rahulReviewVideo.getId()).orElseThrow().getStatus())
+                .isEqualTo(VideoStatus.REVIEW);
+    }
+
+    @Test
+    void revisionLoopReturnsToReviewAndThenTheClientApproves() throws Exception {
+        // Client asks for a change; editor takes the video back into editing and resolves it.
+        String body = requestRevision(rahulReviewVideo, "00:17", "Faster transition")
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        long revisionId = objectMapper.readTree(body).get("id").asLong();
+        adminStatus(rahulReviewVideo, "EDITING").andExpect(status().isOk());
+        mvc.perform(post("/api/admin/revisions/" + revisionId + "/resolve").header("Authorization", bearer(admin)))
+                .andExpect(status().isOk());
+
+        // Can't approve while it's being edited.
+        approve(rahulReviewVideo).andExpect(status().isConflict());
+
+        // Back to review, the client approves.
+        adminStatus(rahulReviewVideo, "REVIEW").andExpect(status().isOk());
+        approve(rahulReviewVideo)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.revisionCount").value(1))
+                .andExpect(jsonPath("$.openRevisionCount").value(0));
+    }
+
+    @Test
+    void movingAnApprovedVideoBackBeforeCompletedClearsTheApproval() throws Exception {
+        approve(rahulReviewVideo).andExpect(status().isOk());
+        adminStatus(rahulReviewVideo, "REVIEW").andExpect(status().isOk())
+                .andExpect(jsonPath("$.approvedAt").isEmpty());
+
+        // Delivery after approval keeps the approval stamp.
+        approve(rahulReviewVideo).andExpect(status().isOk());
+        adminStatus(rahulReviewVideo, "DELIVERED").andExpect(status().isOk())
+                .andExpect(jsonPath("$.approvedAt").isNotEmpty())
+                .andExpect(jsonPath("$.deliveredAt").isNotEmpty());
+    }
+
+    @Test
+    void approvalDoesNotTouchPayments() throws Exception {
+        approve(rahulReviewVideo).andExpect(status().isOk());
+
+        portalGet("/projects/" + rahulProject.getId() + "/payments")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.summary.totalPaid").value(10000.00))
+                .andExpect(jsonPath("$.summary.status").value("PARTIALLY_PAID"));
+    }
+
     private ResultActions portalGet(String path) throws Exception {
         return mvc.perform(get("/api/client/me" + path).header("Authorization", bearer(rahul)));
     }
@@ -236,5 +358,16 @@ class ClientPortalIT extends IntegrationTest {
                 .header("Authorization", bearer(rahul))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json(Map.of("timecode", timecode, "comment", comment))));
+    }
+
+    private ResultActions approve(Video video) throws Exception {
+        return mvc.perform(post("/api/client/me/videos/" + video.getId() + "/approve").header("Authorization", bearer(rahul)));
+    }
+
+    private ResultActions adminStatus(Video video, String target) throws Exception {
+        return mvc.perform(patch("/api/admin/videos/" + video.getId() + "/status")
+                .header("Authorization", bearer(admin))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json(Map.of("status", target))));
     }
 }

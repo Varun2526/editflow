@@ -20,12 +20,13 @@ public record ClientVideoResponse(
         boolean overdue,
         long revisionCount,
         long openRevisionCount,
+        Instant approvedAt,
         Instant deliveredAt) {
 
     public static ClientVideoResponse from(Video video, RevisionCounts revisions, LocalDate today) {
         return new ClientVideoResponse(video.getId(), video.getProject().getId(), video.getTitle(),
                 video.getContentType(), video.getStatus(), video.getDeadline(), video.getDriveUrl(),
                 VideoDeadlines.isOverdue(video.getDeadline(), video.getStatus(), today),
-                revisions.total(), revisions.open(), video.getDeliveredAt());
+                revisions.total(), revisions.open(), video.getApprovedAt(), video.getDeliveredAt());
     }
 }
