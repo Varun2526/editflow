@@ -243,6 +243,18 @@ URL rules (`SecurityConfig`, in order):
 
 **Ownership (second layer).** Portal services resolve the caller's client id with `CurrentUser.clientId()` from the JWT, never from the request. Loading another client's project or video returns **403** ("You do not have access to this …"); unknown ids return **404**.
 
+**Rate limiting.** Limits are counted in memory over fixed time windows, configurable under `app.rate-limit.*`, with no Redis:
+
+| Rule | Where | Default |
+|---|---|---|
+| Login attempts per client IP | `RequestRateLimitFilter` | 10 / 5 min |
+| Inquiry submissions per client IP | `RequestRateLimitFilter` | 5 / hour |
+| Failed logins per account | `LoginThrottle` in `AuthService` | 20 / 15 min, cleared by a successful login |
+
+- **Response:** a limited request gets **429** in the usual envelope, with a `Retry-After` header.
+- **Client IP:** taken from `X-Forwarded-For`, since the app runs behind Render's proxy. That header can be forged, which is why logins are also limited per account.
+- **Tests:** the limits are switched off in the `test` profile; `RateLimitIT` switches them back on.
+
 **Error envelope** (every 4xx/5xx, including filter-level 401/403):
 
 ```json
@@ -373,7 +385,7 @@ frontend/src/
 
 ## 10. Testing
 
-**Backend.** Run `./mvnw verify` (177 tests).
+**Backend.** Run `./mvnw verify` (184 tests).
 
 - **Unit tests** cover:
   - workflow transitions and client approval
@@ -381,6 +393,7 @@ frontend/src/
   - current-project selection
   - JWT
   - auth service
+  - the rate limiter
 - **Integration tests** use Spring Boot, MockMvc and Testcontainers PostgreSQL 16, so the real Flyway SQL is what gets tested. Areas covered:
 
   | Test class | Covers |
@@ -396,10 +409,11 @@ frontend/src/
   | `DashboardIT` | Summary and tasks figures |
   | `ClientPortalIT` | Isolation between clients, approval, the revision loop |
   | `SchemaConstraintsIT` | Database CHECK/UNIQUE constraints |
+  | `RateLimitIT` | Login and inquiry limits, per-account lockout, `Retry-After` |
 
   They are skipped without Docker.
 
-**Frontend.** Run `npm test` (Vitest + Testing Library, 72 tests). Coverage:
+**Frontend.** Run `npm test` (Vitest + Testing Library, 79 tests). Coverage:
 
 - auth and routing guards
 - per-tab sessions
@@ -412,6 +426,8 @@ frontend/src/
 - workflow guidance
 - the Today figures
 - the cinematic fallbacks
+- the legal pages and footer
+- the server wake-up notice
 
 ---
 
@@ -424,7 +440,16 @@ All settings come from environment variables (see the README table). Profiles:
 
 `backend/.env` is optional, gitignored, and imported automatically.
 
-**Planned hosting:** Vercel (SPA, `frontend/vercel.json` rewrite), Render (backend; needs a container because Render has no native Java runtime), and Neon (PostgreSQL; `DATABASE_URL` must be in JDBC form). None of this is set up yet: there is no Dockerfile or `render.yaml` so far.
+**Hosting:** Vercel (SPA), Render (API, as a Docker container) and Neon (PostgreSQL). The step-by-step checklist is in the README.
+
+| Piece | What it does |
+|---|---|
+| `backend/Dockerfile` | Multi-stage Maven build onto an `eclipse-temurin:21-jre-alpine` runtime, running as a non-root user. `SPRING_PROFILES_ACTIVE=prod` is baked in, so a missing variable can never fall back to `local`. Memory flags (`MaxRAMPercentage=75`, Serial GC, `ExitOnOutOfMemoryError`) fit a 512 MB instance. |
+| `render.yaml` | Blueprint: Docker runtime, `/actuator/health` health check, generated `JWT_SECRET`, prompted database, CORS and admin values. |
+| `application.yml` | `forward-headers-strategy: native` (https-aware behind the proxy), Hikari pool of `DB_POOL_SIZE` (default 5), graceful shutdown. |
+| `frontend/vercel.json` | SPA rewrite, immutable caching for hashed `/assets`, and `nosniff`, `X-Frame-Options`, `Referrer-Policy` and `Permissions-Policy` headers. |
+| Cold starts | Render's free tier sleeps. The SPA pings `/actuator/health` (fire-and-forget, `no-cors`) when public pages or login load. API requests wait up to 75 s, and any request slower than 3.5 s shows a "Waking up the server…" notice (`api/serverStatus.js`, `ServerWakeNotice`). |
+| CI | `.github/workflows/ci.yml` runs `./mvnw verify` (with Testcontainers) and the frontend lint, tests and build on every push and pull request. |
 
 ---
 
@@ -435,4 +460,5 @@ All settings come from environment variables (see the README table). Profiles:
 - **Media lives on Google Drive.** There's no upload or streaming.
 - **Payments are records only**, with no gateway.
 - **Single admin**, single currency (INR).
+- **Rate limits are in memory, per instance.** That's fine for one Render instance; several instances would need a shared store.
 - **"Mark approved" by the admin** (for approvals given offline) completes a video without `approved_at`, so only portal approvals are labelled "Approved by client".

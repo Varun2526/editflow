@@ -144,19 +144,84 @@ Open http://localhost:5173.
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Admin bootstrap only |
 | `APP_TIMEZONE` | Default `Asia/Kolkata`. Defines "today" for due dates and overdue. |
 | `SPRING_PROFILES_ACTIVE` | `prod` in production; unset locally |
-| `PORT` | Default `8081` |
+| `PORT` | Default `8081` (Render sets it) |
+| `DB_POOL_SIZE` | Default `5`. Keep it small for Neon's free tier. |
 
 **Frontend:** `VITE_API_URL`, the backend base URL with no trailing slash.
 
-## Deployment
+## Deployment (Vercel + Render + Neon)
 
-Planned: Vercel (frontend), Render (backend) and Neon (PostgreSQL). Not set up yet.
+Everything deployable is in the repo:
 
-`frontend/vercel.json` already contains the SPA rewrite. The backend reads all production settings from the environment variables above.
+- `backend/Dockerfile`: multi-stage build onto a Java 21 runtime, with the `prod` profile and memory flags baked in.
+- `render.yaml`: Render Blueprint for the API.
+- `frontend/vercel.json`: SPA rewrite, asset caching and security headers.
+- `.github/workflows/ci.yml`: runs both test suites on every push.
+
+### 1. Database (Neon)
+
+1. Create a project in a region near your users (e.g. Singapore).
+2. Copy the **pooled** connection string. It looks like:
+
+   ```
+   postgres://USER:PASSWORD@ep-xxx-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+   ```
+
+3. Convert it to JDBC form. User and password become separate variables:
+
+   | Variable | Value |
+   |---|---|
+   | `DATABASE_URL` | `jdbc:postgresql://ep-xxx-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require` |
+   | `DATABASE_USERNAME` | `USER` |
+   | `DATABASE_PASSWORD` | `PASSWORD` |
+
+Flyway creates the schema on the first boot. Nothing else is inserted except the admin account.
+
+### 2. Backend (Render)
+
+1. Go to **New → Blueprint** and select this repository. Render reads `render.yaml`.
+2. Fill in the prompted variables:
+   - the three `DATABASE_*` values from step 1
+   - `ADMIN_EMAIL` and `ADMIN_PASSWORD` (8+ characters)
+   - `FRONTEND_URL`: use a placeholder for now and set it in step 4
+3. `JWT_SECRET` is generated automatically. **Don't change it later**, or every session is signed out.
+4. Wait for the deploy, then check that `https://<service>.onrender.com/actuator/health` returns `{"status":"UP"}`.
+
+### 3. Frontend (Vercel)
+
+1. Import the repository.
+2. Set **Root Directory** to `frontend`. Vite is detected from `vercel.json`.
+3. Add the environment variable `VITE_API_URL` = `https://<service>.onrender.com`, with no trailing slash.
+4. Deploy.
+
+### 4. Connect them
+
+1. In Render, set `FRONTEND_URL` to your Vercel URL, e.g. `https://editflow.vercel.app`, and redeploy. Separate several URLs with commas; wildcards aren't allowed.
+2. Open the site:
+   - submit a test inquiry from **Work With Me**
+   - sign in as the admin
+   - accept the inquiry
+   - log into the portal with the temporary password in a second tab
+3. Delete the test client's data afterwards if you don't want to keep it.
+
+### What to expect on the free tiers
+
+- **Render sleeps** after about 15 minutes idle, and the first request then takes up to about a minute. The site pings the API on page load, and shows a "Waking up the server…" notice while a request is slow. A paid instance removes the delay.
+- **Neon pauses** when idle and resumes in about a second on the next query.
+- **Rate limits** apply to the public endpoints:
+
+  | Endpoint | Limit |
+  |---|---|
+  | Login, per IP | 10 attempts / 5 minutes |
+  | Failed logins, per account | 20 / 15 minutes |
+  | Inquiries, per IP | 5 / hour |
+
+  Change them with `app.rate-limit.*` properties.
 
 ## Known limitations
 
 - **No refresh tokens.** Sessions expire after `JWT_TTL_MINUTES`, and the token lives in `sessionStorage`.
+- **Rate limits are kept in memory.** They reset on restart, and assume a single backend instance.
 - **No email or notifications.** Credentials and updates are shared manually, e.g. on WhatsApp.
 - **Video files aren't stored or streamed.** Each video links to its Google Drive location.
 - **Payments are manual records only**, with no payment gateway.
