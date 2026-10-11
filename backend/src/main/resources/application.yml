@@ -1,0 +1,55 @@
+# Shared configuration. Every secret / environment-specific value comes from an environment variable.
+# With no profile set (e.g. STS "Run As -> Spring Boot App"), the `local` profile is used.
+spring:
+  application:
+    name: editflow
+  profiles:
+    default: local
+  config:
+    # Optional backend/.env file (KEY=VALUE) for local overrides; real env vars still win.
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${PORT:8081}
+  error:
+    include-stacktrace: never
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+app:
+  timezone: ${APP_TIMEZONE:Asia/Kolkata}
+  cors:
+    allowed-origins: ${FRONTEND_URL}
+  jwt:
+    # HMAC-SHA256 signing secret, at least 32 bytes. Generate with: openssl rand -base64 48
+    secret: ${JWT_SECRET:}
+    ttl-minutes: ${JWT_TTL_MINUTES:480}
+    allow-generated-secret: false
+  admin:
+    # Creates the admin account on startup if no admin exists yet. Never logged.
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+    name: ${ADMIN_NAME:EditFlow Admin}

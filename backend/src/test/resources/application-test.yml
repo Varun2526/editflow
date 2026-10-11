@@ -1,0 +1,6 @@
+# Datasource is supplied by Testcontainers (@ServiceConnection).
+app:
+  cors:
+    allowed-origins: http://localhost:5173
+  jwt:
+    secret: test-only-signing-secret-at-least-32-bytes-long

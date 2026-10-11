@@ -1,0 +1,26 @@
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# Eclipse / STS (generated on import)
+.project
+.classpath
+.settings/
+.factorypath
+.sts4-cache/
+.springBeans
+
+# Backend
+backend/target/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/dist-public/
+
+# Secrets — only the .env.example files are committed
+.env
+.env.*
+!.env.example

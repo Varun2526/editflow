@@ -1,0 +1,19 @@
+# Local development defaults so the app runs out of the box against a local PostgreSQL.
+# These values are for a throwaway local database only; production sets real env vars.
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/editflow}
+    username: ${DATABASE_USERNAME:editflow}
+    password: ${DATABASE_PASSWORD:editflow}
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+app:
+  cors:
+    allowed-origins: ${FRONTEND_URL:http://localhost:5173}
+  jwt:
+    # Without JWT_SECRET, local runs use a random per-process key (tokens reset on restart).
+    allow-generated-secret: true
