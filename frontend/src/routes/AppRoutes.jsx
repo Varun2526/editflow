@@ -12,6 +12,8 @@ import AdminOverview from '../pages/admin/Overview'
 const PublicLayout = lazy(() => import('../layouts/PublicLayout').then((m) => ({ default: m.PublicLayout })))
 const Landing = lazy(() => import('../pages/public/Landing'))
 const WorkWithMe = lazy(() => import('../pages/public/WorkWithMe'))
+const Terms = lazy(() => import('../pages/public/Legal').then((m) => ({ default: m.Terms })))
+const Privacy = lazy(() => import('../pages/public/Legal').then((m) => ({ default: m.Privacy })))
 const PublicFallback = <div className="min-h-screen bg-[#09090b]" />
 import AdminInquiries from '../pages/admin/Inquiries'
 import AdminClients from '../pages/admin/Clients'
@@ -36,6 +38,8 @@ export function AppRoutes() {
       <Route element={<Suspense fallback={PublicFallback}><PublicLayout /></Suspense>}>
         <Route index element={<Landing />} />
         <Route path="work-with-me" element={<WorkWithMe />} />
+        <Route path="terms" element={<Terms />} />
+        <Route path="privacy" element={<Privacy />} />
       </Route>
       <Route path="login" element={<Login />} />
       <Route element={<RequireAuthenticated />}>

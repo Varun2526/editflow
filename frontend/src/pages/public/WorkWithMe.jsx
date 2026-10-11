@@ -105,6 +105,10 @@ export default function WorkWithMe() {
         <div className="mt-5 space-y-3">
           <FormError message={form.formError} />
           <Button type="submit" size="lg" loading={form.submitting} className="w-full">Submit inquiry</Button>
+          <p className="text-center text-xs text-zinc-500">
+            By submitting, you agree to the <Link to="/terms" className="underline underline-offset-2 hover:text-zinc-900">Terms of Service</Link> and
+            {' '}<Link to="/privacy" className="underline underline-offset-2 hover:text-zinc-900">Privacy Policy</Link>.
+          </p>
         </div>
       </form>
       </div>

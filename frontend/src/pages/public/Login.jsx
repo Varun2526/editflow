@@ -77,6 +77,10 @@ export default function Login() {
             <p className="mt-6 text-sm text-zinc-500">
               New here? <Link to="/work-with-me" className="font-medium text-zinc-900 underline-offset-4 hover:underline">Start an inquiry</Link>
             </p>
+            <p className="mt-10 flex gap-4 text-xs text-zinc-400">
+              <Link to="/terms" className="hover:text-zinc-700">Terms of Service</Link>
+              <Link to="/privacy" className="hover:text-zinc-700">Privacy Policy</Link>
+            </p>
           </div>
         </main>
       </div>

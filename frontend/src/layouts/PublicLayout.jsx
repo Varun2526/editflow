@@ -99,10 +99,19 @@ export function PublicLayout() {
             ))}
           </div>
         </div>
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-8 text-sm text-[#8e8e93] sm:px-6">
-          <span>© {YEAR} EditFlow</span>
-          <span>Video editing for creators and brands</span>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-8 text-sm text-[#8e8e93] sm:px-6">
+          <span>© {YEAR} EditFlow · Video editing for creators and brands</span>
+          <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2">
+            <Link to="/work-with-me" className="transition-colors hover:text-white">Work with me</Link>
+            <Link to="/terms" className="transition-colors hover:text-white">Terms of Service</Link>
+            <Link to="/privacy" className="transition-colors hover:text-white">Privacy Policy</Link>
+            <Link to="/login" className="transition-colors hover:text-white">Client sign in</Link>
+          </nav>
         </div>
+        {/* Maker's mark: invisible until someone selects (click-drags over) the very bottom of the page. */}
+        <p data-credit className="pb-6 text-center text-xs text-transparent selection:bg-accent-500 selection:text-white">
+          Built by Varun Koppula
+        </p>
       </footer>
     </div>
   )
