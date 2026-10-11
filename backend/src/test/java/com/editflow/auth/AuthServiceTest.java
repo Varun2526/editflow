@@ -37,7 +37,7 @@ class AuthServiceTest {
     void setUp() {
         when(passwordEncoder.encode(anyString())).thenAnswer(inv -> "hashed:" + inv.getArgument(0));
         when(jwtService.issue(any())).thenReturn(new JwtService.IssuedToken("token", Instant.EPOCH));
-        authService = new AuthService(userRepository, passwordEncoder, jwtService, currentUser);
+        authService = new AuthService(userRepository, passwordEncoder, jwtService, currentUser, mock(LoginThrottle.class));
     }
 
     @Test

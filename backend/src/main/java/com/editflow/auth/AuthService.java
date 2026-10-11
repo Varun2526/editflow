@@ -27,26 +27,32 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final CurrentUser currentUser;
+    private final LoginThrottle loginThrottle;
     /** Compared against when the email is unknown, so response time doesn't reveal which emails exist. */
     private final String unknownUserHash;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                       JwtService jwtService, CurrentUser currentUser) {
+                       JwtService jwtService, CurrentUser currentUser, LoginThrottle loginThrottle) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.currentUser = currentUser;
+        this.loginThrottle = loginThrottle;
         this.unknownUserHash = passwordEncoder.encode(UUID.randomUUID().toString());
     }
 
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
-        Optional<User> user = userRepository.findByEmail(Emails.normalize(request.email()));
+        String email = Emails.normalize(request.email());
+        loginThrottle.checkAllowed(email);
+        Optional<User> user = userRepository.findByEmail(email);
         boolean passwordMatches = passwordEncoder.matches(
                 request.password(), user.map(User::getPasswordHash).orElse(unknownUserHash));
         if (user.isEmpty() || !passwordMatches) {
+            loginThrottle.recordFailure(email);
             throw new AuthenticationFailedException(INVALID_CREDENTIALS);
         }
+        loginThrottle.recordSuccess(email);
         return toLoginResponse(user.get());
     }
 
