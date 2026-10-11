@@ -52,7 +52,7 @@ export default function Revisions() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-zinc-900">{revision.comment}</p>
                     <p className="mt-1 text-xs text-zinc-500">
-                      <Link to={`/admin/videos/${revision.videoId}`} className="font-medium text-zinc-700 hover:text-accent-700">{videoTitle}</Link>
+                      <Link to={`/admin/videos/${revision.videoId}`} className="font-medium text-zinc-700 hover:text-zinc-500">{videoTitle}</Link>
                       {' · '}{clientName} · {projectName}
                     </p>
                     <p className="mt-0.5 text-xs text-zinc-400">

@@ -19,7 +19,7 @@ export function ProjectTable({ projects, showClient = true }) {
         {projects.map((p) => (
           <Tr key={p.id} onClick={() => navigate(`/admin/projects/${p.id}`)}>
             <Td>
-              <Link to={`/admin/projects/${p.id}`} onClick={(e) => e.stopPropagation()} className="font-medium text-zinc-900 hover:text-accent-700">{p.name}</Link>
+              <Link to={`/admin/projects/${p.id}`} onClick={(e) => e.stopPropagation()} className="font-medium text-zinc-900 hover:text-zinc-500">{p.name}</Link>
               {showClient && <p className="text-xs text-zinc-500">{p.clientName}</p>}
             </Td>
             <Td className="whitespace-nowrap">{formatPeriod(p.month, p.year)}</Td>

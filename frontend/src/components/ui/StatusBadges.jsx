@@ -17,7 +17,7 @@ export function PaymentStatusBadge({ status }) {
 }
 
 export function ProjectStatusBadge({ status }) {
-  const tone = { ACTIVE: 'accent', COMPLETED: 'green', ARCHIVED: 'neutral' }[status]
+  const tone = { ACTIVE: 'blue', COMPLETED: 'green', ARCHIVED: 'neutral' }[status]
   return <Badge tone={tone} animateKey={status}>{PROJECT_STATUS_LABEL[status]}</Badge>
 }
 

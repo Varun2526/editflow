@@ -9,7 +9,7 @@ export function DriveLink({ url, label = 'Open Drive' }) {
       target="_blank"
       rel="noopener noreferrer"
       onClick={(event) => event.stopPropagation()}
-      className="inline-flex items-center gap-1 text-[13px] font-medium text-zinc-700 underline-offset-2 hover:text-accent-700 hover:underline"
+      className="inline-flex items-center gap-1 text-[13px] font-medium text-zinc-700 underline-offset-2 hover:text-zinc-500 hover:underline"
     >
       {label}
       <ExternalLink className="size-3.5" />

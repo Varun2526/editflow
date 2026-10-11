@@ -47,7 +47,7 @@ export function PortalLayout() {
                   <span
                     aria-hidden="true"
                     className={`absolute inset-x-3 -bottom-px h-0.5 origin-left rounded-full transition-transform duration-300 ease-out-expo ${
-                      isActive ? 'scale-x-100 bg-accent-500' : 'scale-x-0 bg-zinc-300 group-hover:scale-x-100'
+                      isActive ? 'scale-x-100 bg-zinc-900' : 'scale-x-0 bg-zinc-300 group-hover:scale-x-100'
                     }`}
                   />
                 </>

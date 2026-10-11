@@ -33,10 +33,10 @@ function NavItem({ item: { to, label, icon: Icon, end, badge }, onNavigate, coun
     >
       {({ isActive }) => (
         <>
-          <span aria-hidden="true" className={`absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent-500 transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-          <Icon className={`size-4 transition-colors duration-200 ${isActive ? 'text-accent-600' : 'text-zinc-400 group-hover:text-zinc-600'}`} />
+          <span aria-hidden="true" className={`absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-zinc-900 transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+          <Icon className={`size-4 transition-colors duration-200 ${isActive ? 'text-zinc-900' : 'text-zinc-400 group-hover:text-zinc-600'}`} />
           <span className="flex-1">{label}</span>
-          {count > 0 && <span className="rounded-full bg-accent-600 px-1.5 py-px text-[11px] font-semibold text-white tabular" aria-label={`${count} pending`}>{count}</span>}
+          {count > 0 && <span className="rounded-full bg-zinc-900 px-1.5 py-px text-[11px] font-semibold text-white tabular" aria-label={`${count} pending`}>{count}</span>}
         </>
       )}
     </NavLink>

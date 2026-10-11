@@ -12,7 +12,7 @@ export function PageHeader({ title, description, actions, back, meta, eyebrow })
       )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          {eyebrow && <p className="eyebrow mb-1.5 text-accent-600">{eyebrow}</p>}
+          {eyebrow && <p className="eyebrow mb-1.5 text-zinc-500">{eyebrow}</p>}
           <h1 className="truncate font-display text-2xl font-bold tracking-tight text-zinc-900 sm:text-[28px]">{title}</h1>
           {description && <p className="mt-1 text-sm text-zinc-500">{description}</p>}
           {meta && <div className="mt-2.5 flex flex-wrap items-center gap-2">{meta}</div>}

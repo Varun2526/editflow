@@ -3,7 +3,8 @@ import { AnimatedNumber } from './AnimatedNumber'
 
 /** Dashboard figure. Numeric values count up; `format` controls display (e.g. currency). */
 export function StatCard({ label, value, format, hint, tone = 'default', to, children }) {
-  const valueColor = tone === 'danger' ? 'text-red-600' : tone === 'accent' ? 'text-accent-700' : 'text-zinc-900'
+  // Figures stay neutral; red is reserved for genuine problems (tone 'danger').
+  const valueColor = tone === 'danger' ? 'text-red-600' : 'text-zinc-900'
   const body = (
     <>
       <p className="text-[13px] font-medium text-zinc-500">{label}</p>
@@ -21,7 +22,7 @@ export function StatCard({ label, value, format, hint, tone = 'default', to, chi
       className={`${classes} transition-[transform,box-shadow,border-color] duration-300 ease-out-expo hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg hover:shadow-zinc-900/[0.06]`}
     >
       {/* Soft corner glow on hover, adapted from the portfolio's bento cards. */}
-      <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-accent-200/50 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
+      <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-zinc-200/60 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
       {body}
     </Link>
   ) : (

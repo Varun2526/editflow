@@ -84,7 +84,7 @@ export default function Inquiries() {
               icon={Inbox}
               title={filter === 'PENDING' ? 'No inquiries waiting for you' : 'No inquiries here'}
               description="Inquiries arrive from your public Work With Me page. Accepting one creates the client, their portal login and their first project."
-              action={<a href="/work-with-me" target="_blank" rel="noreferrer" className="text-sm font-medium text-zinc-700 underline underline-offset-4 hover:text-accent-700">Open your Work With Me page</a>}
+              action={<a href="/work-with-me" target="_blank" rel="noreferrer" className="text-sm font-medium text-zinc-700 underline underline-offset-4 hover:text-zinc-500">Open your Work With Me page</a>}
             />
           )}
         >
@@ -95,7 +95,7 @@ export default function Inquiries() {
                 {list.map((inquiry) => (
                   <Tr key={inquiry.id} onClick={() => setSelected(inquiry)}>
                     <Td>
-                      <button type="button" onClick={(e) => { e.stopPropagation(); setSelected(inquiry) }} className="font-medium text-zinc-900 hover:text-accent-700">{inquiry.name}</button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setSelected(inquiry) }} className="font-medium text-zinc-900 hover:text-zinc-500">{inquiry.name}</button>
                       <p className="text-xs text-zinc-500">{inquiry.email}</p>
                     </Td>
                     <Td>{inquiry.contentType}</Td>

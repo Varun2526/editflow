@@ -35,7 +35,7 @@ function AttentionRow({ item, onTransition, busy }) {
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <Link to={item.href} className="font-medium text-zinc-900 hover:text-accent-700">{item.title}</Link>
+          <Link to={item.href} className="font-medium text-zinc-900 hover:text-zinc-500">{item.title}</Link>
           {item.overdue && <OverdueBadge />}
         </div>
         <p className="mt-0.5 text-sm text-zinc-500">
@@ -58,11 +58,54 @@ function WaitingRow({ item, onTransition, busy }) {
   return (
     <li className="flex items-center gap-3 px-5 py-3">
       <div className="min-w-0 flex-1">
-        <Link to={item.href} className="text-sm font-medium text-zinc-800 hover:text-accent-700">{item.title}</Link>
+        <Link to={item.href} className="text-sm font-medium text-zinc-800 hover:text-zinc-500">{item.title}</Link>
         <p className="text-xs text-zinc-500">{item.step.title} · {item.context}</p>
       </div>
       <Button size="sm" variant="ghost" loading={busy} onClick={() => onTransition(item)}>{item.step.action.label}</Button>
     </li>
+  )
+}
+
+function Figure({ label, value, to }) {
+  return (
+    <div>
+      <dt className="text-xs text-zinc-500">{label}</dt>
+      <dd className="mt-0.5 font-display text-lg font-bold tabular text-zinc-900">
+        {to ? <Link to={to} className="hover:text-zinc-500">{value}</Link> : value}
+      </dd>
+    </div>
+  )
+}
+
+/**
+ * Secondary, quiet totals under the action queue — straight from /dashboard/summary.
+ * Video counts cover ACTIVE projects; money covers ACTIVE + COMPLETED projects (the backend's scopes).
+ */
+function KeyFigures({ summary }) {
+  const delivered = summary.videos.byStatus?.DELIVERED ?? 0
+  return (
+    <section aria-labelledby="key-figures" className="border-t border-zinc-200/80 pt-5">
+      <h2 id="key-figures" className="eyebrow mb-3 text-zinc-500">Overview</h2>
+      <div className="grid gap-x-8 gap-y-5 lg:grid-cols-[4fr_3fr]">
+        <div>
+          <p className="mb-2 text-xs text-zinc-400">Work · active projects</p>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+            <Figure label="Active projects" value={summary.activeProjects} to="/admin/projects" />
+            <Figure label="Clients" value={summary.totalClients} to="/admin/clients" />
+            <Figure label="Active videos" value={summary.videos.total - delivered} to="/admin/videos" />
+            <Figure label="Videos delivered" value={delivered} />
+          </dl>
+        </div>
+        <div>
+          <p className="mb-2 text-xs text-zinc-400">Money · active and completed projects</p>
+          <dl className="grid grid-cols-3 gap-x-6 gap-y-3">
+            <Figure label="Project fees" value={formatMoney(summary.totalFees)} />
+            <Figure label="Paid" value={formatMoney(summary.totalPaid)} />
+            <Figure label="Outstanding" value={formatMoney(summary.outstanding)} to="/admin/payments" />
+          </dl>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -71,7 +114,7 @@ function FirstRun() {
   const link = `${window.location.origin}/work-with-me`
   return (
     <Card className="p-8 text-center sm:p-12">
-      <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-accent-50 text-accent-600 ring-8 ring-accent-50/50"><Inbox className="size-5" /></div>
+      <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-700 ring-8 ring-zinc-100/50"><Inbox className="size-5" /></div>
       <h2 className="mt-5 font-display text-2xl font-bold tracking-tight">Your workspace is ready</h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-zinc-600">
         Work arrives as inquiries from your Work With Me page. Accepting one creates the client and their first project — then you add videos and take them from footage to delivery.
@@ -178,7 +221,7 @@ export default function Overview() {
           {waiting.length > 0 && (
             <section>
               <h2 className="eyebrow mb-1 text-zinc-500">Waiting on clients</h2>
-              <p className="mb-3 text-sm text-zinc-500">Update these when footage arrives or the client approves.</p>
+              <p className="mb-3 text-sm text-zinc-500">Clients approve videos in their portal. Mark footage received when it arrives.</p>
               <Card className="overflow-hidden">
                 <ul className="divide-y divide-zinc-100">
                   {waiting.slice(0, 6).map((item) => <WaitingRow key={item.id} item={item} onTransition={transition} busy={busyId === item.id} />)}
@@ -188,12 +231,7 @@ export default function Overview() {
             </section>
           )}
 
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 border-t border-zinc-200/80 pt-5 text-sm sm:grid-cols-4">
-            <div><dt className="text-zinc-500">Active projects</dt><dd className="mt-0.5 font-display text-lg font-bold"><Link to="/admin/projects" className="hover:text-accent-700">{summary.activeProjects}</Link></dd></div>
-            <div><dt className="text-zinc-500">Videos in progress</dt><dd className="mt-0.5 font-display text-lg font-bold">{summary.videos.total - summary.videos.done}</dd></div>
-            <div><dt className="text-zinc-500">Clients</dt><dd className="mt-0.5 font-display text-lg font-bold"><Link to="/admin/clients" className="hover:text-accent-700">{summary.totalClients}</Link></dd></div>
-            <div><dt className="text-zinc-500">Outstanding</dt><dd className="mt-0.5 font-display text-lg font-bold"><Link to="/admin/payments" className="hover:text-accent-700">{formatMoney(overview.outstanding)}</Link></dd></div>
-          </dl>
+          <KeyFigures summary={summary} />
         </div>
       )}
     </>

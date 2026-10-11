@@ -29,6 +29,12 @@ const project = {
   payment: { totalFee: '25000.00', totalPaid: '10000.00', balance: '15000.00', status: 'PARTIALLY_PAID' },
 }
 
+const summary = {
+  totalClients: 3, activeProjects: 2, pendingInquiries: 1, openRevisions: 0,
+  videos: { total: 7, done: 3, progressPercent: 42.86, overdue: 1, byStatus: { PENDING: 1, EDITING: 2, REVIEW: 1, COMPLETED: 1, DELIVERED: 2 } },
+  totalFees: '45000.00', totalPaid: '28000.00', outstanding: '17000.00',
+}
+
 describe('guided workflow screens', () => {
   beforeEach(() => vi.clearAllMocks())
 
@@ -42,7 +48,7 @@ describe('guided workflow screens', () => {
     ])
     projectsApi.list.mockResolvedValue([project])
     paymentsApi.overview.mockResolvedValue({ projects: [project], outstanding: '15000.00' })
-    dashboardApi.summary.mockResolvedValue({ totalClients: 1, activeProjects: 1, videos: { total: 3, done: 1 } })
+    dashboardApi.summary.mockResolvedValue(summary)
 
     renderApp('/admin')
 
@@ -56,6 +62,35 @@ describe('guided workflow screens', () => {
     // The client-side wait is shown separately, with its catch-up action.
     expect(screen.getByText('Waiting on clients')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Media received' })).toBeInTheDocument()
+  })
+
+  it('Today shows the real key figures from the dashboard summary, below the queue', async () => {
+    storeSession(ADMIN)
+    authApi.me.mockResolvedValue(ADMIN)
+    inquiriesApi.list.mockResolvedValue([])
+    videosApi.listAll.mockResolvedValue([
+      { video: video(5, 'Morning Workout Reel', 'COMPLETED', { approvedAt: '2026-10-11T10:00:00Z' }), projectName: project.name, clientName: 'Rahul Fitness' },
+    ])
+    projectsApi.list.mockResolvedValue([project])
+    paymentsApi.overview.mockResolvedValue({ projects: [project], outstanding: '17000.00' })
+    dashboardApi.summary.mockResolvedValue(summary)
+
+    renderApp('/admin')
+
+    const figures = (await screen.findByRole('heading', { name: 'Overview' })).closest('section')
+    const value = (label) => within(figures).getByText(label).nextElementSibling.textContent
+    expect(value('Active projects')).toBe('2')
+    expect(value('Clients')).toBe('3')
+    expect(value('Active videos')).toBe('5') // 7 in active projects − 2 delivered
+    expect(value('Videos delivered')).toBe('2')
+    expect(value('Project fees')).toBe('₹45,000')
+    expect(value('Paid')).toBe('₹28,000')
+    expect(value('Outstanding')).toBe('₹17,000')
+    // The action queue stays first; the client-approved video's next step is delivery.
+    const needsYou = screen.getByText('Needs you').closest('section')
+    expect(needsYou.compareDocumentPosition(figures) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(within(needsYou).getByText(/Deliver this video/)).toBeInTheDocument()
+    expect(within(needsYou).getByRole('button', { name: 'Deliver' })).toBeInTheDocument()
   })
 
   it('the client overview leads with what needs the client and links straight to it', async () => {

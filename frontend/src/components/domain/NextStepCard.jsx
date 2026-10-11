@@ -15,19 +15,19 @@ export function NextStepCard({ step, onAction, actionLoading = false, audience =
     <section
       aria-label={label}
       className={`relative overflow-hidden rounded-2xl border p-5 sm:p-6 ${
-        yourTurn ? 'border-accent-200 bg-gradient-to-br from-accent-50/80 via-white to-white' : 'border-zinc-200/80 bg-white'
+        yourTurn ? 'border-zinc-300 bg-gradient-to-br from-zinc-50 via-white to-white shadow-sm shadow-zinc-900/[0.03]' : 'border-zinc-200/80 bg-white'
       }`}
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 items-start gap-3.5">
           <span className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full ${
-            yourTurn ? 'bg-accent-600 text-white' : done ? 'bg-emerald-50 text-emerald-600' : 'bg-zinc-100 text-zinc-500'
+            yourTurn ? 'bg-zinc-900 text-white' : done ? 'bg-emerald-50 text-emerald-600' : 'bg-zinc-100 text-zinc-500'
           }`}
           >
             <Icon className="size-4" />
           </span>
           <div className="min-w-0">
-            <p className={`eyebrow ${yourTurn ? 'text-accent-700' : 'text-zinc-500'}`}>{label}</p>
+            <p className={`eyebrow ${yourTurn ? 'text-zinc-900' : 'text-zinc-500'}`}>{label}</p>
             <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-zinc-900">{step.title}</h2>
             {step.detail && <p className="mt-1 text-sm text-zinc-600">{step.detail}</p>}
             {step.after && step.action && <p className="mt-1.5 text-xs text-zinc-500">Then: {step.after}</p>}

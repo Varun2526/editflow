@@ -20,7 +20,7 @@ export function ProgressBar({ percent, size = 'md', className = '' }) {
       className={`w-full overflow-hidden rounded-full bg-zinc-100 ${size === 'sm' ? 'h-1.5' : 'h-2'} ${className}`}
     >
       <div
-        className="h-full rounded-full bg-gradient-to-r from-accent-500 to-accent-400 transition-[width] duration-700 ease-out-expo"
+        className="h-full rounded-full bg-zinc-800 transition-[width] duration-700 ease-out-expo"
         style={{ width: `${shown}%` }}
       />
     </div>

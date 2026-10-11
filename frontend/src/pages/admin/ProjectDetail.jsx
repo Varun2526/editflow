@@ -39,7 +39,7 @@ function VideoRow({ video, onChanged, onEdit, onDelete }) {
     <li className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-zinc-50/60 sm:flex-row sm:items-center">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <Link to={`/admin/videos/${video.id}`} className="font-medium text-zinc-900 hover:text-accent-700">{video.title}</Link>
+          <Link to={`/admin/videos/${video.id}`} className="font-medium text-zinc-900 hover:text-zinc-500">{video.title}</Link>
           <VideoStatusBadge status={video.status} />
           {video.overdue && <OverdueBadge />}
         </div>
@@ -275,7 +275,7 @@ export default function ProjectDetail() {
                   <PaymentsPanel project={p} payments={payments} onRecord={() => setRecording(true)} onDelete={setDeletingPayment} />
                   <Card className="p-5 text-sm">
                     <h2 className="font-semibold">Client</h2>
-                    <Link to={`/admin/clients/${p.clientId}`} className="mt-1 block font-medium text-zinc-800 hover:text-accent-700">{p.clientName}</Link>
+                    <Link to={`/admin/clients/${p.clientId}`} className="mt-1 block font-medium text-zinc-800 hover:text-zinc-500">{p.clientName}</Link>
                     {p.description && <p className="mt-3 border-t border-zinc-100 pt-3 text-zinc-600">{p.description}</p>}
                   </Card>
                 </aside>

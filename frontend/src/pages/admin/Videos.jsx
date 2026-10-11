@@ -56,7 +56,7 @@ export default function Videos() {
                 {list.map(({ video, clientName, projectName }) => (
                   <Tr key={video.id} onClick={() => navigate(`/admin/videos/${video.id}`)}>
                     <Td>
-                      <Link to={`/admin/videos/${video.id}`} onClick={(e) => e.stopPropagation()} className="font-medium text-zinc-900 hover:text-accent-700">{video.title}</Link>
+                      <Link to={`/admin/videos/${video.id}`} onClick={(e) => e.stopPropagation()} className="font-medium text-zinc-900 hover:text-zinc-500">{video.title}</Link>
                       <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-zinc-500">
                         {CONTENT_TYPE_LABEL[video.contentType]}
                         {video.openRevisionCount > 0 && <span>{video.openRevisionCount} open revision{video.openRevisionCount === 1 ? '' : 's'}</span>}

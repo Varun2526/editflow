@@ -60,7 +60,7 @@ export default function Clients() {
                   return (
                     <Tr key={client.id} onClick={() => navigate(`/admin/clients/${client.id}`)}>
                       <Td>
-                        <Link to={`/admin/clients/${client.id}`} onClick={(e) => e.stopPropagation()} className="font-medium text-zinc-900 hover:text-accent-700">{client.name}</Link>
+                        <Link to={`/admin/clients/${client.id}`} onClick={(e) => e.stopPropagation()} className="font-medium text-zinc-900 hover:text-zinc-500">{client.name}</Link>
                         {client.companyName && <p className="text-xs text-zinc-500">{client.companyName}</p>}
                       </Td>
                       <Td>

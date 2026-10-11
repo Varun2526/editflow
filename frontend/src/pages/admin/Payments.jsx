@@ -38,7 +38,7 @@ export default function Payments() {
                   {o.recentPayments.map((p) => (
                     <li key={p.id} className="flex items-center justify-between gap-4 px-5 py-3">
                       <div className="min-w-0">
-                        <Link to={`/admin/projects/${p.projectId}`} className="text-sm font-medium text-zinc-900 hover:text-accent-700">{p.clientName}</Link>
+                        <Link to={`/admin/projects/${p.projectId}`} className="text-sm font-medium text-zinc-900 hover:text-zinc-500">{p.clientName}</Link>
                         <p className="truncate text-xs text-zinc-500">{p.projectName}{p.note && ` · ${p.note}`}</p>
                       </div>
                       <div className="text-right">
