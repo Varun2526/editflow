@@ -16,6 +16,9 @@ const FALLBACK = {
 export function toApiError(error) {
   if (error?.isApiError) return error
   if (axios.isAxiosError(error)) {
+    if (error.code === 'ECONNABORTED') {
+      return apiError(0, 'The server is taking too long to respond. Please try again in a moment.')
+    }
     if (!error.response) {
       return apiError(0, "Can't reach the server. Check your connection and try again.")
     }

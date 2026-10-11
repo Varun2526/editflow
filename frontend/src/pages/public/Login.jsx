@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 import { Link } from 'react-router'
 import { useAuth } from '../../context/AuthContext'
+import { warmUpServer } from '../../api/serverStatus'
 import { useForm } from '../../hooks/useForm'
 import { homePathFor } from '../../utils/session'
 import { VIDEO_STATUSES, VIDEO_STATUS_LABEL } from '../../utils/labels'
@@ -38,6 +40,8 @@ export default function Login() {
   const { user, ready, login, sessionExpired } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  // Start waking a sleeping backend while the visitor types their credentials.
+  useEffect(() => warmUpServer(), [])
 
   const form = useForm({ email: '', password: '' }, {
     validate: (v) => ({

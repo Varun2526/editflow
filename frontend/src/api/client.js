@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { trackRequest } from './serverStatus'
 
 const baseURL = import.meta.env.VITE_API_URL
 
@@ -10,7 +11,8 @@ if (baseURL === undefined && import.meta.env.MODE !== 'test') {
 /** The single Axios instance. Every API module goes through it. */
 export const api = axios.create({
   baseURL,
-  timeout: 20000,
+  // Long enough for a sleeping Render instance to boot (~50s); slow requests show a notice meanwhile.
+  timeout: 75000,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -24,6 +26,7 @@ export function configureAuth({ getToken, onUnauthorized }) {
 }
 
 api.interceptors.request.use((config) => {
+  config.settle = trackRequest()
   const token = tokenProvider()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -35,8 +38,12 @@ api.interceptors.request.use((config) => {
 const CREDENTIAL_ENDPOINTS = ['/api/auth/login']
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    response.config.settle?.()
+    return response
+  },
   (error) => {
+    error.config?.settle?.()
     const status = error.response?.status
     const url = error.config?.url ?? ''
     if (status === 401 && !CREDENTIAL_ENDPOINTS.some((path) => url.endsWith(path))) {

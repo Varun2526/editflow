@@ -7,6 +7,7 @@ import { Atmosphere } from '../cinematic/Atmosphere'
 import { Cursor } from '../cinematic/Cursor'
 import { ScrollTrigger } from '../cinematic/gsap'
 import { scrollToTop, startLenis, stopLenis } from '../cinematic/lenis'
+import { warmUpServer } from '../api/serverStatus'
 
 const YEAR = new Date().getFullYear()
 const EASE = [0.16, 1, 0.3, 1]
@@ -62,6 +63,7 @@ export function PublicLayout() {
   const location = useLocation()
 
   useEffect(() => {
+    warmUpServer()
     startLenis()
     return () => stopLenis()
   }, [])
