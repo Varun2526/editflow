@@ -1,0 +1,13 @@
+target/
+.env
+.env.*
+.mvn/
+mvnw
+mvnw.cmd
+*.iml
+.idea/
+.vscode/
+.settings/
+.project
+.classpath
+Dockerfile

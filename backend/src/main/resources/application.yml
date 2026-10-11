@@ -12,6 +12,9 @@ spring:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
+    hikari:
+      # Small pool: one instance, and Neon's free tier caps connections.
+      maximum-pool-size: ${DB_POOL_SIZE:5}
   jpa:
     open-in-view: false
     hibernate:
@@ -23,9 +26,14 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
 
 server:
   port: ${PORT:8081}
+  # Behind Render's TLS proxy: trust X-Forwarded-Proto/For so redirects and Location headers use https.
+  forward-headers-strategy: native
+  shutdown: graceful
   error:
     include-stacktrace: never
     include-message: never
