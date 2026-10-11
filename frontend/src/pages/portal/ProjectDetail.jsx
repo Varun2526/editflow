@@ -60,9 +60,10 @@ export default function ProjectDetail() {
                 >
                   {() => (
                     <>
-                      <Group title="Ready for your review" hint="Watch on Drive, then leave timecoded notes if you want changes." videos={s.review} />
+                      <Group title="Ready for your review" hint="Watch each one, then approve it or request a revision." videos={s.review} />
                       <Group title="Waiting for your footage" hint="Share the raw footage on Google Drive to get these started." videos={s.awaitingFootage} />
                       <Group title="In production" hint="Your editor is working on these." videos={s.inProduction} />
+                      <Group title="Approved — ready for delivery" hint="You approved these. Your editor will deliver them." videos={s.approved} />
                       <Group title="Delivered" hint="Final videos — download them from Drive." videos={s.delivered} />
                     </>
                   )}

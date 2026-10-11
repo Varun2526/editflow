@@ -37,40 +37,50 @@ export function videoNextStep(video) {
     case 'MEDIA_RECEIVED':
       return {
         key: 'start-editing', owner: 'admin',
-        title: 'Footage is in — start editing',
-        detail: 'Raw media has been received.',
+        title: 'Start editing',
+        detail: 'The raw footage is in.',
         action: { label: 'Start editing', transition: 'EDITING' },
         after: 'The video moves to Editing.',
       }
     case 'EDITING':
-      return {
-        key: 'send-to-review', owner: 'admin',
-        title: 'Editing in progress',
-        detail: 'Send it to the client when the cut is ready.',
-        action: { label: 'Send to review', transition: 'REVIEW' },
-        after: 'The client sees it as ready for their review.',
-      }
+      // Revision loop: change requests are resolved while editing, then the cut goes back for review.
+      return open > 0
+        ? {
+          key: 'resolve-revisions', owner: 'admin',
+          title: `Address ${plural(open, 'change request')}`,
+          detail: 'Resolve each request once it’s done in the edit.',
+          action: { label: 'Review changes', open: true },
+          after: 'Send the updated cut back for review.',
+        }
+        : {
+          key: 'send-to-review', owner: 'admin',
+          title: 'Send video for review',
+          detail: 'Editing in progress — send it when the cut is ready.',
+          action: { label: 'Send to review', transition: 'REVIEW' },
+          after: 'The client can watch it, approve it or request a revision.',
+        }
     case 'REVIEW':
       return open > 0
         ? {
           key: 'resolve-revisions', owner: 'admin',
-          title: `${plural(open, 'change request')} to address`,
-          detail: 'The client left timestamped feedback.',
-          action: { label: 'Review changes', open: true },
-          after: 'Resolve each request, then mark the video completed.',
+          title: `Address ${plural(open, 'change request')}`,
+          detail: 'The client asked for changes with timecodes.',
+          action: { label: 'Start revisions', transition: 'EDITING' },
+          after: 'Resolve each request in the edit, then send it back for review.',
         }
         : {
           key: 'awaiting-review', owner: 'client',
-          title: 'With the client for review',
-          detail: 'Waiting for the client’s feedback.',
-          action: { label: 'Mark completed', transition: 'COMPLETED' },
-          after: 'Once approved it’s ready to deliver.',
+          title: 'Waiting for client review',
+          detail: 'The client approves it in their portal or requests a revision.',
+          // Fallback for an approval given outside the portal (e.g. on a call).
+          action: { label: 'Mark approved', transition: 'COMPLETED' },
+          after: 'It’s ready to deliver.',
         }
     case 'COMPLETED':
       return {
         key: 'deliver', owner: 'admin',
-        title: 'Approved — ready to deliver',
-        detail: 'The final cut is done.',
+        title: 'Deliver this video',
+        detail: video.approvedAt ? 'The client approved it in their portal.' : 'The final cut is done.',
         action: { label: 'Deliver', transition: 'DELIVERED' },
         after: 'The delivery date is recorded and the client sees it as delivered.',
       }
@@ -121,7 +131,7 @@ export function projectNextStep(project, videos) {
   if (videos.length === 0) {
     return {
       key: 'add-first-video', owner: 'admin',
-      title: 'Add the first video',
+      title: 'Add your first video',
       detail: 'Plan this month’s videos to start production.',
       action: { label: 'Add video', kind: 'add-video' },
       after: 'Each video starts as Pending until the client’s footage arrives.',
@@ -145,8 +155,8 @@ export function projectNextStep(project, videos) {
     if (balance > 0) {
       return {
         key: 'record-payment', owner: 'admin',
-        title: 'All videos delivered — collect the balance',
-        detail: `₹${balance.toLocaleString('en-IN')} is still outstanding.`,
+        title: 'Record payment',
+        detail: `All videos are delivered. ₹${balance.toLocaleString('en-IN')} is still outstanding.`,
         action: { label: 'Record payment', kind: 'record-payment' },
         after: 'The project shows as fully paid.',
       }
@@ -154,18 +164,21 @@ export function projectNextStep(project, videos) {
     if (project.status === 'ACTIVE') {
       return {
         key: 'complete-project', owner: 'admin',
-        title: 'Delivered and paid — close the project',
-        detail: 'Every video is delivered and the fee is fully paid.',
+        title: 'Project is financially complete',
+        detail: 'Every video is delivered and the fee is fully paid. Close it to move it out of active work.',
         action: { label: 'Mark project completed', kind: 'complete-project' },
         after: 'It moves out of your active work.',
       }
     }
-    return { key: 'finished', owner: 'done', title: 'Project complete', detail: 'Delivered and fully paid.', action: null }
+    return { key: 'finished', owner: 'done', title: 'Project is financially complete', detail: 'Every video delivered and fully paid.', action: null }
   }
+  const inReview = client.filter((v) => v.status === 'REVIEW').length
   return {
     key: 'waiting-on-client', owner: 'client',
-    title: 'Waiting on the client',
-    detail: `${plural(client.length, 'video')} waiting for footage or review. Nothing needs you right now.`,
+    title: inReview > 0 ? 'Waiting for client review' : 'Waiting for raw footage',
+    detail: inReview > 0
+      ? `${plural(inReview, 'video')} with the client to approve or request changes. Nothing needs you right now.`
+      : `${plural(client.length, 'video')} waiting for the client’s footage. Nothing needs you right now.`,
     action: null,
   }
 }
@@ -231,13 +244,14 @@ export function buildAttention({ inquiries = [], videoItems = [], activeProjects
 
 /**
  * Client view of a project: what the client needs to do and what is happening.
- * Clients never change status; their actions are reviewing (leaving feedback), sending footage and paying.
+ * The client's actions: sending footage, approving a video in review or requesting a revision, and paying.
  */
 export function clientSituation(project, videos) {
   const review = videos.filter((v) => v.status === 'REVIEW' && v.openRevisionCount === 0)
   const awaitingFootage = videos.filter((v) => v.status === 'PENDING')
-  const inProduction = videos.filter((v) => ['MEDIA_RECEIVED', 'EDITING', 'COMPLETED'].includes(v.status)
+  const inProduction = videos.filter((v) => ['MEDIA_RECEIVED', 'EDITING'].includes(v.status)
     || (v.status === 'REVIEW' && v.openRevisionCount > 0))
+  const approved = videos.filter((v) => v.status === 'COMPLETED')
   const openChanges = videos.reduce((sum, v) => sum + (v.openRevisionCount ?? 0), 0)
   const delivered = videos.filter((v) => v.status === 'DELIVERED')
   const balance = Number(project?.payment?.balance ?? 0)
@@ -247,9 +261,10 @@ export function clientSituation(project, videos) {
   else if (delivered.length === videos.length) headline = 'Every video this month has been delivered.'
   else if (review.length > 0) headline = `${plural(review.length, 'video')} ready for your review.`
   else if (inProduction.length > 0) headline = `${plural(inProduction.length, 'video')} in production.`
+  else if (approved.length > 0) headline = `${plural(approved.length, 'video')} approved — ready for delivery.`
   else headline = 'Waiting for your footage to begin.'
 
-  return { review, awaitingFootage, inProduction, delivered, openChanges, balance, headline }
+  return { review, awaitingFootage, inProduction, approved, delivered, openChanges, balance, headline }
 }
 
 /** What a video means for the client, in their words, and what (if anything) they should do. */
@@ -260,13 +275,16 @@ export function clientVideoStep(video) {
       return { key: 'send-footage', owner: 'client', title: 'Waiting for your footage', detail: 'Share the raw footage with your editor on Google Drive. Editing starts as soon as it arrives.' }
     case 'MEDIA_RECEIVED':
     case 'EDITING':
+      if (open > 0) {
+        return { key: 'changes-in-progress', owner: 'admin', title: `Your editor is working on ${plural(open, 'change request')}`, detail: 'You’ll be able to review the updated cut here.' }
+      }
       return { key: 'editing', owner: 'admin', title: 'Your editor is working on it', detail: 'You’ll see it here as ready for review when the cut is done.' }
     case 'REVIEW':
       return open > 0
         ? { key: 'changes-in-progress', owner: 'admin', title: `Your editor is working on ${plural(open, 'change request')}`, detail: 'You’ll be able to review the updated cut here.' }
-        : { key: 'review', owner: 'client', title: 'Ready for your review', detail: 'Watch it on Drive. Something to change? Leave a note with the timecode. Happy with it? Nothing to do — your editor will finalize it.' }
+        : { key: 'review', owner: 'client', title: 'Ready for your review', detail: 'Watch it, then approve it — or request a revision with the timecode of what to change.' }
     case 'COMPLETED':
-      return { key: 'finalizing', owner: 'admin', title: 'Approved — delivery coming', detail: 'The final cut is done and will be delivered shortly.' }
+      return { key: 'approved', owner: 'admin', title: 'Approved — ready for delivery', detail: 'Your editor will deliver the final video.' }
     case 'DELIVERED':
       return open > 0
         ? { key: 'changes-in-progress', owner: 'admin', title: `Your editor is looking at ${plural(open, 'change request')}`, detail: 'You asked for changes after delivery.' }

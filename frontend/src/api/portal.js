@@ -12,6 +12,8 @@ export const portalApi = {
   projectVideos: (id) => api.get(`/api/client/me/projects/${id}/videos`).then((r) => r.data),
   projectPayments: (id) => api.get(`/api/client/me/projects/${id}/payments`).then((r) => r.data),
   video: (id) => api.get(`/api/client/me/videos/${id}`).then((r) => r.data),
+  /** The client's sign-off on a video in review (REVIEW → COMPLETED). Returns the updated video. */
+  approveVideo: (videoId) => api.post(`/api/client/me/videos/${videoId}/approve`).then((r) => r.data),
   requestRevision: (videoId, revision) =>
     api.post(`/api/client/me/videos/${videoId}/revisions`, revision).then((r) => r.data),
 }

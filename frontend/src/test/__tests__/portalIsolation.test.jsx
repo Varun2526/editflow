@@ -36,6 +36,7 @@ describe('client portal at the UI/API boundary', () => {
     await portalApi.projectPayments(2)
     await portalApi.video(5)
     await portalApi.requestRevision(5, { timecode: '00:17', comment: 'Faster' })
+    await portalApi.approveVideo(5)
 
     const urls = [...api.get.mock.calls, ...api.post.mock.calls].map(([url]) => url)
     expect(urls.every((url) => url.startsWith('/api/client/me/'))).toBe(true)

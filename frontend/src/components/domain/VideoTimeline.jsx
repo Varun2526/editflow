@@ -23,7 +23,7 @@ export function VideoTimeline({ video }) {
             <span
               aria-current={current ? 'step' : undefined}
               className={`relative z-10 flex size-6 items-center justify-center rounded-full text-[11px] font-semibold transition-[background-color,color,box-shadow] duration-300 ease-out-expo ${
-                done ? 'bg-zinc-900 text-white' : current ? 'bg-accent-500 text-white ring-4 ring-accent-100' : 'bg-white text-zinc-400 ring-1 ring-zinc-200'
+                done ? 'bg-zinc-900 text-white' : current ? 'bg-white text-zinc-900 ring-2 ring-zinc-900' : 'bg-white text-zinc-400 ring-1 ring-zinc-200'
               }`}
             >
               {done ? <Check className="size-3.5" /> : index + 1}
@@ -32,6 +32,7 @@ export function VideoTimeline({ video }) {
               {VIDEO_STATUS_LABEL[status]}
             </span>
             {stamp && <span className="mt-0.5 text-[11px] text-zinc-500">{formatDateTime(stamp)}</span>}
+            {status === 'COMPLETED' && video.approvedAt && <span className="mt-0.5 text-[11px] font-medium text-emerald-700">Approved by client</span>}
           </li>
         )
       })}

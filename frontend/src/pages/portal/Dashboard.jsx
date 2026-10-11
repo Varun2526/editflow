@@ -42,6 +42,7 @@ export default function Dashboard() {
   const stages = [
     s.review.length && `${s.review.length} ready for review`,
     s.inProduction.length && `${s.inProduction.length} in production`,
+    s.approved.length && `${s.approved.length} approved`,
     s.awaitingFootage.length && `${s.awaitingFootage.length} waiting for footage`,
     s.delivered.length && `${s.delivered.length} delivered`,
   ].filter(Boolean)
@@ -49,18 +50,18 @@ export default function Dashboard() {
   return (
     <div className="stagger space-y-6">
       <div>
-        <p className="eyebrow text-accent-600">{project.name} · {formatPeriod(project.month, project.year)}</p>
+        <p className="eyebrow text-zinc-500">{project.name} · {formatPeriod(project.month, project.year)}</p>
         <h1 className="mt-1.5 font-display text-3xl font-bold tracking-tight sm:text-4xl">{s.headline}</h1>
       </div>
 
       {s.review.length > 0 && (
-        <section className="rounded-2xl border border-accent-200 bg-gradient-to-br from-accent-50/80 via-white to-white p-5 sm:p-6">
+        <section className="rounded-2xl border border-zinc-300 bg-gradient-to-br from-zinc-50 via-white to-white p-5 sm:p-6">
           <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-600 text-white"><Eye className="size-4" /></span>
+            <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white"><Eye className="size-4" /></span>
             <div className="min-w-0 flex-1">
-              <p className="eyebrow text-accent-700">Your turn</p>
+              <p className="eyebrow text-zinc-900">Your turn</p>
               <h2 className="mt-1 font-display text-xl font-bold tracking-tight">Review {plural(s.review.length, 'video')}</h2>
-              <p className="mt-1 text-sm text-zinc-600">Watch each one on Drive. Want a change? Leave a note with the timecode. Happy with it? Nothing to do — your editor will finalize it.</p>
+              <p className="mt-1 text-sm text-zinc-600">Watch each one, then approve it — or request a revision with the timecode of what to change.</p>
               <ul className="mt-4 divide-y divide-zinc-200/70 rounded-xl border border-zinc-200/80 bg-white">
                 {s.review.map((video) => (
                   <li key={video.id} className="flex items-center justify-between gap-3 px-4 py-3">
@@ -109,7 +110,7 @@ export default function Dashboard() {
           </div>
           <ProgressBar percent={project.videos.progressPercent} className="mt-3" />
           {stages.length > 0 && <p className="mt-3 text-sm text-zinc-600">{stages.join(' · ')}</p>}
-          <Link to={`/portal/projects/${project.id}`} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-zinc-700 hover:text-accent-700">
+          <Link to={`/portal/projects/${project.id}`} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-zinc-700 hover:text-zinc-500">
             See every video <ArrowRight className="size-4" />
           </Link>
         </Card>
@@ -123,7 +124,7 @@ export default function Dashboard() {
           <p className="mt-3 text-xs text-zinc-500">
             {s.balance > 0 ? 'Pay your editor by UPI — it appears here once they record it.' : 'Fully paid. Thank you!'}
           </p>
-          <Link to={`/portal/payments?project=${project.id}`} className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-zinc-700 hover:text-accent-700">
+          <Link to={`/portal/payments?project=${project.id}`} className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-zinc-700 hover:text-zinc-500">
             Payment history <ArrowRight className="size-4" />
           </Link>
         </Card>
