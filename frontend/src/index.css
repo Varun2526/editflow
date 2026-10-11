@@ -1,0 +1,292 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Satoshi", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Cabinet Grotesk", "Satoshi", ui-sans-serif, system-ui, sans-serif;
+
+  /* Accent: the reference portfolio's red (#ff334b), as a scale. 600/700 are deeper so text and
+     buttons on light surfaces keep enough contrast. */
+  --color-accent-50: #fff1f3;
+  --color-accent-100: #ffe1e6;
+  --color-accent-200: #ffc2cc;
+  --color-accent-400: #ff5266;
+  --color-accent-500: #ff334b;
+  --color-accent-600: #e11d3a;
+  --color-accent-700: #b8122c;
+
+  /* One motion curve everywhere: fast start, long soft settle. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-fade-up: fade-up 0.45s var(--ease-out-expo) both;
+  --animate-fade-in: fade-in 0.18s ease-out both;
+  --animate-fade-out: fade-out 0.16s ease-in both;
+  --animate-pop: pop 0.35s var(--ease-out-expo) both;
+  --animate-dialog-in: dialog-in 0.32s var(--ease-out-expo) both;
+  --animate-dialog-out: dialog-out 0.16s ease-in both;
+  --animate-drawer-in: drawer-in 0.36s var(--ease-out-expo) both;
+  --animate-drawer-out: drawer-out 0.2s ease-in both;
+  --animate-toast-in: toast-in 0.4s var(--ease-out-expo) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.88); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes dialog-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes dialog-out {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: translateY(6px) scale(0.99); }
+  }
+  @keyframes drawer-in {
+    from { transform: translateX(-100%); }
+    to { transform: none; }
+  }
+  @keyframes drawer-out {
+    from { transform: none; }
+    to { transform: translateX(-100%); }
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-zinc-50 text-zinc-900 antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent-500;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Uppercase meta label above titles. */
+@utility eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Children enter one after another (page sections, card grids). */
+@utility stagger {
+  & > * {
+    animation: var(--animate-fade-up);
+  }
+  & > :nth-child(2) { animation-delay: 40ms; }
+  & > :nth-child(3) { animation-delay: 80ms; }
+  & > :nth-child(4) { animation-delay: 120ms; }
+  & > :nth-child(5) { animation-delay: 160ms; }
+  & > :nth-child(6) { animation-delay: 200ms; }
+  & > :nth-child(n + 7) { animation-delay: 240ms; }
+}
+
+/* Static film grain for the dark public surfaces (no animation: zero runtime cost). */
+@utility grain {
+  position: relative;
+  isolation: isolate;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: screen;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 240px 240px;
+  }
+}
+
+@utility skeleton {
+  background: linear-gradient(90deg, var(--color-zinc-100) 25%, var(--color-zinc-50) 50%, var(--color-zinc-100) 75%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ───────────────────────── Cinematic layer (public site + login) ───────────────────────── */
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* Custom pointer: native cursor hidden only while it's active; text fields keep the I-beam. */
+html.has-custom-cursor, html.has-custom-cursor * { cursor: none; }
+html.has-custom-cursor :is(input, textarea, select, [contenteditable="true"]) { cursor: text; }
+
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 51, 75, 0.35);
+  background: radial-gradient(circle, rgba(255, 51, 75, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 99999;
+  will-change: transform;
+  opacity: 0;
+  visibility: hidden;
+  margin: -23px 0 0 -23px; /* centre on the pointer (GSAP owns transform) */
+}
+.cursor-symbol {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 100000;
+  will-change: transform;
+  color: #ffffff;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  filter: drop-shadow(0 0 6px rgba(255, 51, 75, 0.85)) drop-shadow(0 0 14px rgba(255, 51, 75, 0.45));
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Animated film grain over the whole public site. */
+.film-grain-overlay {
+  position: fixed;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.035;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  animation: grain-shift 0.5s steps(2) infinite;
+}
+@keyframes grain-shift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-2%, -1%); }
+  50% { transform: translate(1%, 2%); }
+  75% { transform: translate(-1%, 1%); }
+  100% { transform: translate(2%, -2%); }
+}
+
+/* Cursor-following ember glow. */
+.spotlight {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(circle at center, rgba(255, 51, 75, 0.06) 0%, transparent 70%);
+  will-change: transform;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(8, 8, 8, 0.8) 100%);
+  z-index: 2;
+}
+
+/* Bento service cards: lift, ember border, ambient corner glow. */
+.bento-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(22, 22, 26, 0.95), rgba(12, 12, 15, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.bento-card:hover, .bento-card.is-in-view {
+  border-color: rgba(255, 51, 75, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 51, 75, 0.16);
+}
+.bento-glow {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 51, 75, 0.25), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.bento-card:hover .bento-glow, .bento-card.is-in-view .bento-glow { opacity: 1; }
+
+/* Nav link underline sweep. */
+.nav-link { position: relative; color: #8e8e93; transition: color 0.3s ease; }
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 100%;
+  height: 1px;
+  background: #ff334b;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.nav-link:hover { color: #f5f5f7; }
+.nav-link:hover::after { transform: scaleX(1); }
+
+/* Word split targets for scroll-scrubbed illumination. */
+.statement-word { display: inline-block; will-change: opacity, filter; }
+
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track { animation: marquee-scroll 30s linear infinite; }
+
+@media (hover: none) {
+  .cursor-ring, .cursor-symbol, .spotlight { display: none !important; }
+  html.has-custom-cursor, html.has-custom-cursor * { cursor: auto !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .film-grain-overlay, .marquee-track { animation: none; }
+  .cursor-ring { display: none !important; }
+}
